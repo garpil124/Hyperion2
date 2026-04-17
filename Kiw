@@ -1142,7 +1142,7 @@ def start_cmd(update: Update, context: CallbackContext):
     if "pj" in data:
         buttons.append([
             InlineKeyboardButton(
-                "📩 REQUEST PARTNER",
+                "📩 ✧ 𝑅𝐸𝒬𝒰𝐸𝒮𝒯 𝒫𝒜𝑅𝒯𝒩𝐸𝑅 ✧",
                 url=f"https://t.me/{data['pj']}"
             )
         ])
@@ -1150,7 +1150,7 @@ def start_cmd(update: Update, context: CallbackContext):
     if "rules" in data:
         buttons.append([
             InlineKeyboardButton(
-                "📜 RULES PARTNER",
+                "📜 ༺ 𝑹𝑼𝑳𝑬𝑺 𝑷𝑨𝑹𝑻𝑵𝑬𝑹 ༻",
                 callback_data="rules"
             )
         ])
@@ -1159,7 +1159,7 @@ def start_cmd(update: Update, context: CallbackContext):
     if data.get("livechat"):
         buttons.append([
             InlineKeyboardButton(
-                "💬 LIVE CHAT",
+                "💬 ✧ 𝐋𝐈𝐕𝐄 𝐂𝐇𝐀𝐓 ✧",
                 url=data["livechat"]
             )
         ])
