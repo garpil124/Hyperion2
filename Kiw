@@ -1263,19 +1263,6 @@ def button_handler(update: Update, context: CallbackContext):
         handle_durasi(update, context)
         return
 
-    # ================= AUTO TAG BUTTON =================
-    elif query.data == "cmd_autotag":
-        context.bot.send_message(
-            chat_id=query.from_user.id,
-            text=(
-                "🤖 AUTO TAG SETTING\n\n"
-                "Gunakan di private chat:\n"
-                "/autotag pesan\n\n"
-                "Contoh:\n/autotag WOY LINK GACOR"
-            )
-        )
-        return
-
     # ================= OWNER BUTTON =================
 
     elif query.data == "cmd_addpict":
@@ -1547,7 +1534,7 @@ def tagall_worker():
             try:
                 bot.send_message(
                     user_id,
-                    "❌ Maaf lagi close tagall dulu"
+                    "❌ Maaf lagi close tagall dulu 💌"
                 )
             except:
                 pass
@@ -1581,8 +1568,8 @@ def tagall_worker():
 
             start_msg = (
                 "🚀 𝐓𝐀𝐆𝐀𝐋𝐋 𝐃𝐈𝐌𝐔𝐋𝐀𝐈\n\n"
-                f"🔗 partner : {partner_link}\n"
-                "⏰    durasi : 5 menit\n"
+                f"🔗 𝗣𝗔𝗥𝗧𝗡𝗘𝗥 : {partner_link}\n"
+                "⏰ 𝗗𝗨𝗥𝗔𝗦𝗜 : 5 menit\n"
                 "📍 JIKA BOT EROR SILAHKAN KESINI @livechtBot"
             )
 
@@ -1682,14 +1669,14 @@ def tagall_worker():
 
             # ================= SELESAI =================
             keyboard_done = InlineKeyboardMarkup([
-                [InlineKeyboardButton("👑 Creator", url="https://t.me/Brsik23")]
+                [InlineKeyboardButton("🤖 Cʀᴇᴀᴛᴏʀ", url="https://t.me/Brsik23")]
             ])
 
             bot.send_message(
                 chat_id,
-                f"✅     𝐓𝐀𝐆𝐀𝐋𝐋 𝐒𝐄𝐋𝐄𝐒𝐀𝐈\n\n"
-                f"🔗 partner : {partner_link}\n"
-                f"👥 Total: {sent}",
+                f"📥     𝐓𝐀𝐆𝐀𝐋𝐋 𝐒𝐄𝐋𝐄𝐒𝐀𝐈\n\n"
+                f"🔗 𝗣𝗔𝗥𝗧𝗡𝗘𝗥: {partner_link}\n"
+                f"👥 𝗧𝗢𝗧𝗔𝗟: {sent}",
                 reply_markup=keyboard_done
             )
 
@@ -1712,13 +1699,13 @@ def tagall_worker():
             try:
                 if user_id in progress_map:
                     keyboard_private_done = InlineKeyboardMarkup([
-                        [InlineKeyboardButton("👑 Creator", url="https://t.me/Brsik23")]
+                        [InlineKeyboardButton("🪐 Cʀᴇᴀᴛᴏʀ ", url="https://t.me/Brsik23")]
                     ])
 
                     bot.edit_message_text(
                         chat_id=user_id,
                         message_id=progress_map[user_id]["msg_id"],
-                        text=f"✅  𝐓𝐀𝐆𝐀𝐋𝐋 𝐒𝐄𝐋𝐀𝐈\n\n"
+                        text=f"🔉  𝐓𝐀𝐆𝐀𝐋𝐋 𝐒𝐄𝐋𝐀𝐈\n\n"
                              f"🔗 partner : {partner_link}\n"
                              f"🧹 auto delete aktif\n"
                              f"👥 Total: {sent}\n"
@@ -2027,15 +2014,6 @@ def main():
     worker_thread.daemon = True
     worker_thread.start()
     print("🔥 WORKER TAGALL STARTED")
-
-    # ================= AUTO TAG WORKER =================
-    auto_thread = threading.Thread(
-        target=auto_tag_worker,
-        args=(updater.bot,),
-        daemon=True
-    )
-    auto_thread.start()
-    print("⏰ AUTO TAG WORKER STARTED")
 
     # ================= RESET LIMIT =================
     reset_thread = threading.Thread(target=reset_limit_daily)
