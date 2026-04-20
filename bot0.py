@@ -17,7 +17,11 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater, MessageHandler, Filters, CallbackContext, CommandHandler, CallbackQueryHandler
 from telethon import TelegramClient
 import database0
+from fitur import register_fitur
+from user import register_menu
 from emoji import build_emoji
+from rekab import register_rekab
+from font import register_font
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
@@ -34,7 +38,7 @@ SETTING_FILE = "setting.json0"
 BUTTON_FILE = "buttons.json0"
 LOG_CHAT_ID = -1003812690414
 QUEUE_FILE = "queue.json0"
-
+AUTO_TAG_FILE = "autotag.json"
 api_id = 33370509
 api_hash = "669af6caebf2aca264b16cf8b40d37b2"
 client = TelegramClient("session_new0", api_id, api_hash)
@@ -2416,7 +2420,10 @@ def main():
     database0.start_database_system(bot)
 
     dp = updater.dispatcher
-
+    register_menu(dp)
+    register_rekab(dp)
+    register_fitur(dp)
+    register_font(dp)
     # ================= COMMAND =================
     dp.add_handler(CommandHandler("restore", restore_cmd))
     dp.add_handler(CommandHandler("start", start_cmd))
