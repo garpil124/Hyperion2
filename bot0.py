@@ -2244,65 +2244,120 @@ def handle_private(update: Update, context: CallbackContext):
         threading.Thread(target=tagall_worker, daemon=True).start()
 
 
-# ================= MAIN =================
+DEBUG_MODE = True
+VENV_PYTHON = "/root/hyperionn/venv/bin/python"
+BOT_FILE = "/root/hyperionn/bot0.py"
 
-def restore_cmd(update, context):
-    if update.effective_user.id != OWNER_ID:
-        return
+LAST_BACKUP = None
 
-    if not update.message.reply_to_message or not update.message.reply_to_message.document:
-        update.message.reply_text("❌ reply file zip dengan /restore")
+
+# ================= DEBUG =================
+def debug_log(msg):
+    if DEBUG_MODE:
+        print(f"[DEBUG] {msg}")
+
+
+# ================= CORE FILES =================
+CORE_FILES = [
+    "setting.json0",
+    "partner.json0",
+    "buttons.json0",
+    "autotag.json0"
+]
+
+
+# ================= ROLLBACK =================
+def rollback_last_backup(update):
+    global LAST_BACKUP
+
+    if not LAST_BACKUP or not os.path.exists(LAST_BACKUP):
+        update.message.reply_text("❌ tidak ada backup")
         return
 
     try:
-        update.message.reply_text("⏳ restore sedang diproses...")
+        update.message.reply_text("🔁 rollback...")
 
-        # ================= DOWNLOAD =================
+        for f in CORE_FILES:
+            if os.path.exists(f):
+                os.remove(f)
+
+        if os.path.exists("database0"):
+            shutil.rmtree("database0")
+
+        with zipfile.ZipFile(LAST_BACKUP, 'r') as z:
+            z.extractall()
+
+        update.message.reply_text("✅ rollback sukses")
+
+    except Exception as e:
+        update.message.reply_text(f"❌ rollback gagal: {e}")
+
+
+# ================= RESTORE =================
+def restore_cmd(update, context):
+    global LAST_BACKUP
+
+    user_id = update.effective_user.id
+
+    if user_id not in OWNER_IDS:
+        update.message.reply_text("❌ bukan owner")
+        return
+
+    if not update.message.reply_to_message or not update.message.reply_to_message.document:
+        update.message.reply_text("❌ reply file zip")
+        return
+
+    try:
+        update.message.reply_text("⏳ restore...")
+
         file = update.message.reply_to_message.document.get_file()
         file.download("restore.zip")
 
-        import zipfile
-        import os
-
-        # ================= VALIDASI ZIP =================
         if not zipfile.is_zipfile("restore.zip"):
-            update.message.reply_text("❌ file bukan zip valid")
+            update.message.reply_text("❌ zip rusak")
             return
 
         with zipfile.ZipFile("restore.zip", 'r') as z:
             files = z.namelist()
+            debug_log(files)
 
-            # ================= VALIDASI ISI =================
-            valid = any("partner.json5" in f for f in files) or \
-                    any("setting.json5" in f for f in files)
-
-            if not valid:
-                update.message.reply_text("❌ isi zip tidak valid")
+            if not any(f in files for f in CORE_FILES):
+                update.message.reply_text("❌ struktur salah")
                 return
 
-            # ================= BACKUP LAMA =================
-            backup_name = f"backup_before_restore_{int(time.time())}.zip"
-            with zipfile.ZipFile(backup_name, 'w') as backup:
-                if os.path.exists("partner.json0"):
-                    backup.write("partner.json0")
-                if os.path.exists("setting.json0"):
-                    backup.write("setting.json0")
+            # ================= BACKUP BEFORE RESTORE =================
+            LAST_BACKUP = f"backup_before_restore_{int(time.time())}.zip"
+
+            with zipfile.ZipFile(LAST_BACKUP, 'w', zipfile.ZIP_DEFLATED) as backup:
+                for f in CORE_FILES:
+                    if os.path.exists(f):
+                        backup.write(f)
+
                 if os.path.exists("database0"):
-                    for root, dirs, files2 in os.walk("database0"):
+                    for root, _, files2 in os.walk("database0"):
                         for f in files2:
                             backup.write(os.path.join(root, f))
+
+            # ================= CLEAN =================
+            for f in CORE_FILES:
+                if os.path.exists(f):
+                    os.remove(f)
+
+            if os.path.exists("database0"):
+                shutil.rmtree("database0")
 
             # ================= EXTRACT =================
             z.extractall()
 
-        update.message.reply_text("✅ restore sukses, bot akan restart...")
+        update.message.reply_text("✅ restore sukses")
 
-        # ================= AUTO RESTART =================
-        import os
-        os.execv("/root/Hyperionn-/venv/bin/python", ["python", "bot0.py"])
+        # ================= VENV RESTART =================
+        os.execv(VENV_PYTHON, ["python", BOT_FILE])
 
     except Exception as e:
-        update.message.reply_text(f"❌ restore gagal\n{e}")
+        debug_log(e)
+        update.message.reply_text(f"❌ restore gagal: {e}")
+        
 
 # ================= MAIN =================
 
