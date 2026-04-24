@@ -8,7 +8,7 @@ from telegram.ext import CallbackContext, CommandHandler, CallbackQueryHandler
 # ======================
 # DB
 # ======================
-db = sqlite3.connect("absen.db", check_same_thread=False)
+db = sqlite3.connect("absen1.db", check_same_thread=False)
 cur = db.cursor()
 
 cur.execute("""
@@ -60,18 +60,25 @@ def build(gid, page=1):
     data = get_data(gid)
 
     total_page = max(1, (len(data) + 4) // 5)
+    page = max(1, min(page, total_page))
+
     start = (page - 1) * 5
     rows = data[start:start + 5]
 
     now = datetime.now()
 
     text = (
-        f"╔═══ KELILING TMO ═══╗\n"
+        f"╔══════════════════════╗\n"
+        f"      ✦ KELILING TMO ✦\n"
+        f"╚══════════════════════╝\n"
         f"📅 {now.strftime('%d-%m-%Y')} | PAGE {page}/{total_page}\n"
-        f"════════════════════\n\n"
+        f"══════════════════════\n\n"
     )
 
     keyboard = []
+
+    if not rows:
+        text += "❌ DATA KOSONG\n\n"
 
     for rid, nama, gc, status, note in rows:
         text += (
@@ -79,7 +86,7 @@ def build(gid, page=1):
             f"🔹 NAME   : {nama}\n"
             f"🔹 LINK   : {gc}\n"
             f"🔹 STATUS : {status_icon(status)}\n"
-            f"════════════════════\n\n"
+            f"══════════════════════\n\n"
         )
 
         keyboard.append([
@@ -89,9 +96,15 @@ def build(gid, page=1):
             InlineKeyboardButton("🗑", callback_data=f"del_{rid}")
         ])
 
+    # NAV
     keyboard.append([
         InlineKeyboardButton("⬅️", callback_data="prev"),
         InlineKeyboardButton("➡️", callback_data="next")
+    ])
+
+    # ACTION
+    keyboard.append([
+        InlineKeyboardButton("🔄 REFRESH STATUS", callback_data="reset_status")
     ])
 
     keyboard.append([
@@ -157,9 +170,10 @@ def button_cb(update: Update, context: CallbackContext):
     data = query.data
     gid = query.message.chat.id
 
-    print(f"[DEBUG REKAB CALLBACK]: {data}")
-
     try:
+        state = page_state.get(gid, {"page": 1})
+        page = state.get("page", 1)
+
         if data.startswith("miss_"):
             rid = int(data.split("_")[1])
             cur.execute("UPDATE rekab_tmo SET status='MISSING' WHERE id=?", (rid,))
@@ -176,6 +190,11 @@ def button_cb(update: Update, context: CallbackContext):
             rid = int(data.split("_")[1])
             cur.execute("DELETE FROM rekab_tmo WHERE id=?", (rid,))
 
+        elif data == "reset_status":
+            cur.execute("UPDATE rekab_tmo SET status='MISSING' WHERE group_id=?", (gid,))
+            db.commit()
+            query.answer("🔄 STATUS DI RESET", show_alert=False)
+
         elif data == "clear_all":
             cur.execute("DELETE FROM rekab_tmo WHERE group_id=?", (gid,))
             db.commit()
@@ -186,7 +205,7 @@ def button_cb(update: Update, context: CallbackContext):
         elif data == "preview_all":
             rows = get_data(gid)
 
-            text = f"FULL REKAP\nTOTAL: {len(rows)}\n\n"
+            text = f"📦 FULL REKAP\nTOTAL: {len(rows)}\n\n"
 
             for i, (rid, nama, gc, status, note) in enumerate(rows, 1):
                 text += f"{i}. {nama}\n{gc}\n{status_icon(status)}\n\n"
@@ -197,11 +216,9 @@ def button_cb(update: Update, context: CallbackContext):
             return
 
         elif data == "prev":
-            page = page_state.get(gid, {}).get("page", 1)
-            page = max(1, page - 1)
+            page -= 1
 
         elif data == "next":
-            page = page_state.get(gid, {}).get("page", 1)
             page += 1
 
         else:
@@ -209,8 +226,8 @@ def button_cb(update: Update, context: CallbackContext):
 
         db.commit()
 
+        text, markup, total_page = build(gid, page)
         page_state[gid]["page"] = page
-        text, markup, _ = build(gid, page)
 
         query.edit_message_text(text, reply_markup=markup)
         query.answer("UPDATED ✔️")
@@ -219,14 +236,13 @@ def button_cb(update: Update, context: CallbackContext):
         query.answer(f"ERROR: {e}", show_alert=True)
 
 # ======================
-# REGISTER (🔥 FIX DISINI)
+# REGISTER
 # ======================
 def register_rekab(dp):
     dp.add_handler(CommandHandler("addrekab", addrekab))
     dp.add_handler(CommandHandler("rekab", rekab))
 
-    # 🔥 FILTER BIAR GA TABRAK FONT
     dp.add_handler(CallbackQueryHandler(
         button_cb,
-        pattern=r"^(miss_|done_|close_|del_|prev|next|preview_all|clear_all)"
+        pattern=r"^(miss_|done_|close_|del_|prev|next|preview_all|clear_all|reset_status)"
     ))

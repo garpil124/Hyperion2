@@ -1,0 +1,20 @@
+🚀 API RUNNING ON PORT 5000
+ * Serving Flask app 'api'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://134.209.207.18:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [21/Apr/2026 05:55:43] "GET /get?chat_id=123 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 05:56:07] "POST /save HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 05:56:39] "GET /get?chat_id=-100123 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 05:58:56] "GET /get?chat_id=-1002430300514 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 06:01:27] "GET /get?chat_id=-1002430300514 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 06:09:36] "GET /get?chat_id=-1002430300514 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 06:22:15] "GET /get?chat_id=-1002896045673 HTTP/1.1" 200 -
+216.218.206.69 - - [21/Apr/2026 06:27:22] "[33mGET / HTTP/1.1[0m" 404 -
+216.218.206.69 - - [21/Apr/2026 06:28:15] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+127.0.0.1 - - [21/Apr/2026 08:28:17] "GET /get?chat_id=-1002430300514 HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 08:38:25] "POST /save HTTP/1.1" 200 -
+127.0.0.1 - - [21/Apr/2026 08:50:47] "POST /save HTTP/1.1" 200 -

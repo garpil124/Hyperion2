@@ -1,31 +1,35 @@
+from telethon.sync import TelegramClient
 import requests
-from telethon import TelegramClient
 
 api_id = 33370509
 api_hash = "669af6caebf2aca264b16cf8b40d37b2"
+session = "session0"
 
-client = TelegramClient("scrape", api_id, api_hash)
+client = TelegramClient(session, api_id, api_hash)
 
-async def main():
-    await client.start()
-
+def scrape_group(chat_id):
     users = []
 
-    async for u in client.iter_participants(-1001492325666):
-        if not u.bot and not u.deleted:
+    client.start()
+
+    print("[SCRAPE] mulai...")
+
+    for u in client.iter_participants(chat_id):
+        if not u.bot:
             users.append({
                 "id": u.id,
                 "name": u.first_name or "User"
             })
 
-    print(f"Total user keambil: {len(users)}")
+    print(f"[SCRAPE] total: {len(users)}")
 
     requests.post("http://127.0.0.1:5000/save", json={
-        "chat_id": "-1001492325666",
+        "chat_id": str(chat_id),
         "users": users
     })
 
-    print("✅ berhasil kirim ke API")
+    print("[SCRAPE] selesai")
 
-with client:
-    client.loop.run_until_complete(main())
+if __name__ == "__main__":
+    chat_id = -1002430300514  # ganti group ID
+    scrape_group(chat_id)

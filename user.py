@@ -1,12 +1,13 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
+import requests
+from io import BytesIO
 
 # ================= MENU COMMAND =================
 
 def menu_cmd(update, context):
-    text = """
-╭━━━━━━━━━━━━━━━━━━━━━━━╮
-   ⚡ 𝗛𝗘𝗟𝗣 & 𝗙𝗜𝗧𝗨𝗥 𝗕𝗢𝗧 ⚡
+    text = """╭━━━━━━━━━━━━━━━━━━━━━━━╮
+⚡ 𝗛𝗘𝗟𝗣 & 𝗙𝗜𝗧𝗨𝗥 𝗕𝗢𝗧 ⚡
 ╰━━━━━━━━━━━━━━━━━━━━━━━╯
 
 👋 𝐒𝐞𝐥𝐚𝐦𝐚𝐭 𝐝𝐚𝐭𝐚𝐧𝐠 𝐝𝐢 𝐛𝐨𝐭 𝐚𝐮𝐭𝐨𝐭𝐚𝐠𝐚𝐥𝐥!
@@ -31,11 +32,12 @@ def menu_cmd(update, context):
 ⚠️ CATATAN PARTNER:
 • Jɪᴋᴀ ᴘᴀʀᴛɴᴇʀ ʙᴇʟᴜᴍ ᴛᴇʀᴅᴀғᴛᴀʀ, sɪʟᴀᴋᴀɴ ᴀJᴜᴋᴀɴ ʀᴇǫᴜᴇsᴛ
 • Hᴀʀᴀᴘ ᴋᴏɴғɪʀᴍᴀsɪ Jɪᴋᴀ ᴀᴅᴀ ᴘᴇʀɢᴀɴᴛɪᴀɴ ʟɪɴᴋ ɢʀᴏᴜᴘ!!
-• Bᴏᴛ ʜᴀɴʏᴀ ᴜɴᴛᴜᴋ ᴍᴇɴᴅɪᴛᴇᴋsɪ ʟɪɴᴋ ɢʀᴏᴜᴘ, ʙᴜᴋᴀɴ ᴀᴋᴜɴ ᴘʀɪʙᴀᴅɪ!! 
+• Bᴏᴛ ʜᴀɴʏᴀ ᴜɴᴛᴜᴋ ᴍᴇɴᴅɪᴛᴇᴋsɪ ʟɪɴᴋ ɢʀᴏᴜᴘ, ʙᴜᴋᴀɴ ᴀᴋᴜɴ ᴘʀɪʙᴀᴅɪ!!
 • ᴋᴀʟᴀᴜ ᴇʀᴏʀ ʙᴏᴛɴʏᴀ ᴀɴᴅᴀ sɪʟᴀʜᴋᴀɴ ᴋᴇ ʟɪᴠᴇ ᴄʜᴀᴛ !!
-• Jɪᴋᴀ ᴀᴅᴀ ᴘᴇʀɢᴀɴᴛɪᴀɴ ʟɪɴᴋ, ᴛɪᴅᴀᴋ ᴋᴏɴғɪʀᴍᴀsɪ ʟᴀɴɢsᴜɴɢ, 
-  ᴅᴀɴ ʙᴏᴛ ᴍᴇʀᴇsᴘᴏɴ ᴅᴇɴɢᴀɴ ʟɪɴᴋ ᴀᴅᴀ ᴛɪᴅᴀᴋ ᴛᴇʀᴅᴀғᴛᴀʀ ɪᴛᴜ ʙᴜᴋᴀɴ ᴋᴇsᴀʟᴀʜ ᴋᴀᴍɪ!!
-
+• Jɪᴋᴀ ᴀndᴀ ᴘᴇʀɢᴀɴᴛɪᴀɴ ʟɪɴᴋ, ᴛɪᴅᴀᴋ ᴋᴏɴғɪʀᴍᴀsɪ ʟᴀɴɢsᴜɴɢ,
+ᴅᴀɴ ʙᴏᴛ ᴍᴇʀᴇsᴘᴏɴ ᴅᴇɴɢᴀɴ ʟɪɴᴋ ᴀᴅᴀ ᴛɪᴅᴀᴋ ᴛᴇʀᴅᴀғᴛᴀʀ ɪᴛᴜ ʙᴜᴋᴀɴ ᴋᴇsᴀʟᴀʜ ᴋᴀᴍɪ!!
+•Jɪᴋᴀ ᴀɴᴅᴀ ʙᴇʟᴜᴍ Jᴏɪɴ ɢʀᴏᴜᴘ ᴍᴀᴋᴀ ʙᴏᴛ ᴀᴋᴀɴ ᴍᴇɴʏᴜʀᴜʜ Jᴏɪɴ ɢʀᴏᴜᴘ ᴛᴇʀʟᴇʙɪʜ ᴅᴀʜᴜʟᴜ,
+•Jɪᴋᴀ sᴜᴅᴀʜ Jᴏɪɴ ɢʀᴏᴜᴘɴʏᴀ, ʟᴀɴɢsᴜɴɢ ᴋɪʀɪᴍ ᴋᴀᴛᴀ ᴋᴀᴛᴀ ᴛᴀɢᴀʟʟɴʏᴀ sᴀJᴀ!!
 ━━━━━━━━━━━━━━━━━━━━━━━
 
 💡 Gunakan bot dengan bijak!
@@ -45,11 +47,23 @@ def menu_cmd(update, context):
         [InlineKeyboardButton("🛍️ MY STORE", url="https://t.me/storegarf")]
     ]
 
-    update.message.reply_photo(
-        photo="https://i.ibb.co/rf5pNpck/file-00000000d14c71fa9909f192b1de2818.png",
-        caption=text,
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    try:
+        url = "https://i.ibb.co/rf5pNpck/file-00000000d14c71fa9909f192b1de2818.png"
+        response = requests.get(url)
+        image = BytesIO(response.content)
+
+        update.message.reply_photo(
+            photo=image,
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    except Exception as e:
+        print(f"[ERROR PHOTO]: {e}")
+        update.message.reply_text(
+            text,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
 
 # ================= REGISTER =================
 
