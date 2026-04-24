@@ -243,6 +243,46 @@ def del_livechat(update, context):
 
     update.message.reply_text("✅ Live chat dihapus")
 
+# ================= MANUAL BACKUP =================
+def backup_cmd(update, context):
+    global LAST_BACKUP
+
+    user_id = update.effective_user.id
+
+    if user_id not in OWNER_IDS:
+        update.message.reply_text("❌ bukan owner")
+        return
+
+    try:
+        update.message.reply_text("📦 membuat backup...")
+
+        name = f"manual_backup_{int(time.time())}.zip"
+
+        with zipfile.ZipFile(name, 'w', zipfile.ZIP_DEFLATED) as z:
+
+            for f in CORE_FILES:
+                if os.path.exists(f):
+                    z.write(f)
+
+            if os.path.exists("database0"):
+                for root, _, files2 in os.walk("database0"):
+                    for f in files2:
+                        z.write(os.path.join(root, f))
+
+        LAST_BACKUP = name  # 🔥 penting biar rollback bisa pakai ini
+
+        with open(name, "rb") as f:
+            context.bot.send_document(
+                chat_id=update.effective_chat.id,
+                document=f,
+                filename=name
+            )
+
+        update.message.reply_text("✅ backup manual selesai")
+
+    except Exception as e:
+        update.message.reply_text(f"❌ backup gagal: {e}")
+
 # ================= COMMAND =================
 def add_partner(update, context):
     if update.effective_user.id not in OWNER_IDS:
