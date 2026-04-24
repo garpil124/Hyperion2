@@ -609,7 +609,8 @@ def partner_callback(update, context):
             "field": "name"
         }
 
-        query.message.reply_text("✏️ kirim format: NAMA LINK")
+        # 🔥 FIX DI SINI
+        query.edit_message_text("✏️ kirim format: NAMA LINK")
         return
 
     # ================= PAGINATION =================
@@ -630,6 +631,7 @@ def partner_callback(update, context):
     buttons = build_buttons(page, total)
 
     query.edit_message_text(text, reply_markup=buttons)
+
 
 def handle_edit(update, context):
     if "edit" not in context.user_data:
