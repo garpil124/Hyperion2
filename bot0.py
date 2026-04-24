@@ -2435,6 +2435,8 @@ def main():
     dp.add_handler(CommandHandler("addrules", add_rules))
     dp.add_handler(CommandHandler("delrules", del_rules))
     dp.add_handler(CommandHandler("off", off_cmd))
+    dp.add_handler(CommandHandler("backup", backup_cmd))
+    dp.add_handler(CommandHandler("rollback", rollback_last_backup))
     dp.add_handler(CommandHandler("on", on_cmd))
     dp.add_handler(CommandHandler("bc", bc_cmd))
     dp.add_handler(CallbackQueryHandler(partner_callback, pattern="^partner_"))
