@@ -1485,14 +1485,14 @@ def start_cmd(update: Update, context: CallbackContext):
 
     "╭───────────────╮\n"
     "│ ٬٬ ࣪ ، 𒀭 sistem tagall otomatis & cepat.\n"
-    "│ ٬٬ ࣪ ، 𒀭 cukup screenshot / kirim teks.\n"
-    "│ ٬٬ ࣪ ، 𒀭 bot langsung eksekusi tanpa delay.\n"
+    "│ ٬٬ ࣪ ، 𒀭 Budayakan membaca, biar ga bego!!.\n"
+    "│ ٬٬ ࣪ ، 𒀭 jika bingung, silahkan menu user.\n"
     "╰───────────────╯\n\n"
 
     "✦ 𝐂𝐀𝐑𝐀 𝐏𝐀𝐊𝐀𝐈 ✦\n"
     "⟡ kirim pesan / kata yang ingin ditag\n"
     "⟡ bot auto memproses tagall anda\n"
-    "⟡ jika bot diem tidak jalan silahkan ke live chat\n\n"
+    "⟡ jika bot diem tidak memberi notip jalan silahkan ke live chat\n\n"
 
     "        ㅤ\n"
     "     ˖ ╲ ( II.᯽ request & rules partner klik tombol di bawah)"
@@ -2225,7 +2225,7 @@ def handle_private(update: Update, context: CallbackContext):
         msg.reply_text(
             "📢 Permintaan kamu sedang di proses\n"
             "⏳ Durasi: 5 menit\n"
-            "📸 Mohon screenshot\n\n"
+            "💾 cukup forward pesan ini saja\n\n"
             "✨ Tunggu sampai selesai ya..."
         )
     else:
