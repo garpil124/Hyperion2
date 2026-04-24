@@ -465,6 +465,7 @@ def cancel_cmd(update, context):
         pass
         
 
+
 # ================= LIST COMMAND =================
 def list_partner(update, context):
     print("🔥 list_partner kepanggil")
@@ -473,7 +474,6 @@ def list_partner(update, context):
         return
 
     send_partner_page_message(update, context, 0)
-
 
 # ================= SEND (FROM COMMAND) =================
 def send_partner_page_message(update, context, page):
@@ -489,30 +489,17 @@ def send_partner_page_message(update, context, page):
 
     text = f"📋 LIST PARTNER\nHalaman {page+1}\n\n"
 
-    buttons_list = []
-
-    # ================= LIST DATA =================
+    # ❌ HAPUS buttons_list (biang dobel)
     for i, p in enumerate(data[start:end], start + 1):
-        idx = start + (i - start - 1)
-
         text += f"{i}. {p.get('name','-')}\n{p.get('link','-')}\n\n"
 
-        # tombol edit per item
-        buttons_list.append([
-            InlineKeyboardButton("✏️ Edit", callback_data=f"edit_menu_{idx}")
-        ])
-
-    # ================= PAGINATION =================
-    nav_buttons = build_buttons(page, total)
-
-    # gabung tombol edit + pagination
-    keyboard = buttons_list + nav_buttons.inline_keyboard
+    # ✅ CUMA pakai ini
+    keyboard = build_buttons(page, total)
 
     update.message.reply_text(
         text,
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        reply_markup=keyboard
     )
-
 
 # ================= SEND (FROM CALLBACK MENU) =================
 def send_partner_page_callback(query, context, page):
