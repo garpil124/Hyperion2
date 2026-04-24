@@ -244,26 +244,41 @@ def del_livechat(update, context):
     update.message.reply_text("✅ Live chat dihapus")
 
 # ================= COMMAND =================
-# ================= COMMAND =================
 def add_partner(update, context):
     if update.effective_user.id not in OWNER_IDS:
         return
 
-    if not context.args:
-        update.message.reply_text("❌ format: /addpartner link\natau /addpartner nama link")
+    # ================= VALIDASI INPUT =================
+    if not update.message or not update.message.text:
+        update.message.reply_text("❌ format: /addpartner nama link")
+        return
+
+    # ================= AMBIL FULL TEXT =================
+    text = update.message.text
+
+    # hapus command
+    if text.startswith("/addpartner"):
+        text = text.replace("/addpartner", "", 1).strip()
+
+    if not text:
+        update.message.reply_text("❌ format:\n/addpartner nama link\natau /addpartner link")
         return
 
     data = load_partner()
 
-    # ================= CEK FORMAT (NAMA + LINK / LINK SAJA) =================
-    if len(context.args) >= 2:
-        # ================= ADA NAMA =================
-        name_input = context.args[0]
-        link = context.args[1]
+    # ================= PARSING BENAR (AMBIL LINK DARI BELAKANG) =================
+    parts = text.rsplit(" ", 1)
+
+    if len(parts) == 2:
+        name_input, link = parts
     else:
-        # ================= TANPA NAMA (BACKWARD COMPATIBLE) =================
-        link = context.args[0]
+        link = parts[0]
         name_input = None
+
+    # ================= VALIDASI LINK =================
+    if not link.startswith("http"):
+        update.message.reply_text("❌ link tidak valid")
+        return
 
     # ================= CEK DUPLIKAT =================
     for p in data:
@@ -274,7 +289,6 @@ def add_partner(update, context):
     # ================= PRIVATE LINK =================
     if "t.me/+" in link or "joinchat" in link:
         try:
-            # kalau gak ada nama input, pakai auto detect
             name = name_input if name_input else get_group_name(link)
 
             data.append({
@@ -294,8 +308,6 @@ def add_partner(update, context):
     # ================= PUBLIC LINK =================
     username = normalize_link(link)
 
-    # kalau ada nama input → pakai itu
-    # kalau tidak ada → auto fetch (biar gak rusak sistem lama)
     name = name_input if name_input else get_group_name(link)
 
     data.append({
@@ -305,29 +317,9 @@ def add_partner(update, context):
     })
 
     save_partner(data)
+
     update.message.reply_text(f"✅ Partner ditambah:\n{name}")
 
-
-def del_partner(update, context):
-    if update.effective_user.id not in OWNER_IDS:
-        return
-
-    if not context.args:
-        update.message.reply_text("❌ format: /delpartner link")
-        return
-
-    link = context.args[0]
-    data = load_partner()
-
-    new_data = []
-
-    for p in data:
-        if link in p.get("link", ""):
-            continue
-        new_data.append(p)
-
-    save_partner(new_data)
-    update.message.reply_text("✅ Partner dihapus")
 
 def del_partner(update, context):
     if update.effective_user.id not in OWNER_IDS:
