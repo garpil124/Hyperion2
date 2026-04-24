@@ -506,7 +506,7 @@ def send_partner_page_callback(query, context, page):
     data = load_partner()
 
     if not data:
-        query.message.reply_text("❌ kosong")
+        query.edit_message_text("❌ kosong")   # ✅
         return
 
     total = len(data)
@@ -520,7 +520,7 @@ def send_partner_page_callback(query, context, page):
 
     buttons = build_buttons(page, total)
 
-    query.message.reply_text(text, reply_markup=buttons)
+    query.edit_message_text(text, reply_markup=buttons)  # ✅
 
 
 def build_buttons(page, total):
@@ -2438,7 +2438,6 @@ def main():
     dp.add_handler(CommandHandler("rollback", rollback_last_backup))
     dp.add_handler(CommandHandler("on", on_cmd))
     dp.add_handler(CommandHandler("bc", bc_cmd))
-    dp.add_handler(CallbackQueryHandler(partner_callback, pattern="^partner_"))
     dp.add_handler(
     CallbackQueryHandler(partner_callback, pattern="^(partner_|edit_)")
 )
