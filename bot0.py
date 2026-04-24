@@ -504,19 +504,41 @@ def send_partner_page_callback(query, context, page):
     query.message.reply_text(text, reply_markup=buttons)
 
 
-# ================= BUILD BUTTON =================
 def build_buttons(page, total):
     buttons = []
 
+    data = load_partner()
+
+    start = page * PAGE_SIZE
+    end = start + PAGE_SIZE
+
+    # ================= EDIT BUTTON PER ITEM =================
+    for i in range(start, min(end, total)):
+        buttons.append([
+            InlineKeyboardButton(
+                f"✏️ Edit {i+1}",
+                callback_data=f"edit_menu_{i}"
+            )
+        ])
+
+    # ================= NAVIGATION =================
+    nav = []
+
     if page > 0:
-        buttons.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"partner_{page-1}"))
+        nav.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"partner_{page-1}"))
 
-    if (page + 1) * PAGE_SIZE < total:
-        buttons.append(InlineKeyboardButton("➡️ Next", callback_data=f"partner_{page+1}"))
+    if end < total:
+        nav.append(InlineKeyboardButton("➡️ Next", callback_data=f"partner_{page+1}"))
 
-    buttons.append(InlineKeyboardButton("❌ Close", callback_data="partner_close"))
+    if nav:
+        buttons.append(nav)
 
-    return InlineKeyboardMarkup([buttons])
+    # ================= CLOSE =================
+    buttons.append([
+        InlineKeyboardButton("❌ Close", callback_data="partner_close")
+    ])
+
+    return InlineKeyboardMarkup(buttons)
 
 
 # ================= CALLBACK PARTNER =================
