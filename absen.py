@@ -1,11 +1,11 @@
-# ================= ABSEN BOT SYSTEM (PRO SAFE PTB 13.15) =================
+  # ================= ABSEN BOT SYSTEM (FULL AUTO FINAL) =================
 
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import CommandHandler, CallbackQueryHandler
-from datetime import datetime
+from telegram.ext import CommandHandler, CallbackQueryHandler, MessageHandler, Filters
+from datetime import datetime, time
 import pytz
 import sqlite3
-import pesan  # motivasi eksternal
+import pesan
 
 WIB = pytz.timezone("Asia/Jakarta")
 
@@ -32,8 +32,7 @@ db.commit()
 absen_msg = {}
 pending_izin = {}
 
-last_day = None
-last_week = None
+last_day = None  # 🔥 penting biar bisa detect reset
 
 
 # ================= SAVE =================
@@ -92,49 +91,33 @@ def format_absen(chat_id):
             ✦ 𝘼𝘽𝙎𝙀𝙉 𝙃𝘼𝙍𝙄𝘼𝙉 ✦
 ╚════════════════════════════════════╝
 
-📅 𝘋𝘢𝘺 : {now.strftime('%A, %d %B %Y')}
-
-⏰ 𝘛𝘪𝘮𝘦 : {now.strftime('%H:%M WIB')}
-
-────────────────────────────────────
-
-🧠 𝗦𝗬𝗦𝗧𝗘𝗠 𝗦𝗧𝗔𝗧𝗨𝗦
-✨ 𝘓𝘪𝘷𝘦 𝘔𝘰𝘯𝘪𝘵𝘰𝘳𝘪𝘯𝘨 𝘈𝘤𝘵𝘪𝘷𝘦
-
-🟢 𝗛𝗔𝗗𝗜𝗥 : {len(data['hadir'])}
-🟡 𝗜𝗭𝗜𝗡  : {len(data['izin'])}
-🔴 𝗦𝗔𝗞𝗜𝗧 : {len(data['sakit'])}
-
-👥 𝗧𝗢𝗧𝗔𝗟 : {total} 𝗣𝗘𝗢𝗣𝗟𝗘
+📅 {now.strftime('%A, %d %B %Y')}
+⏰ {now.strftime('%H:%M WIB')}
 
 ────────────────────────────────────
 
-📝 𝗗𝗮𝗳𝘁𝗮𝗿 𝗮𝗯𝘀𝗲𝗻𝘀𝗶
+🟢 HADIR : {len(data['hadir'])}
+🟡 IZIN  : {len(data['izin'])}
+🔴 SAKIT : {len(data['sakit'])}
+👥 TOTAL : {total}
+
+────────────────────────────────────
 """
 
     for n, t in data["hadir"]:
-        text += f"\n➤ 🟢 {n}  ✦ ACTIVE  ⏰ {t}"
+        text += f"\n🟢 {n} ⏰ {t}"
 
     for n, a, t in data["izin"]:
-        text += f"\n➤ 🟡 {n}  ✦ LEAVE  ⏰ {t}\n   └ 💬 {a}"
+        text += f"\n🟡 {n} ⏰ {t}\n   └ {a}"
 
     for n, t in data["sakit"]:
-        text += f"\n➤ 🔴 {n}  ✦ OFFLINE  ⏰ {t}"
+        text += f"\n🔴 {n} ⏰ {t}"
 
     if total == 0:
-        text += "\n\n⚠️ Belum ada aktivitas hari ini..."
+        text += "\n\n⚠️ Belum ada absen"
 
-    text += f"""
+    text += f"\n\n────────────────────────────────────\n💬 “{motivasi}”"
 
-────────────────────────────────────
-
-💬 𝗠𝗢𝗧𝗜𝗩𝗔𝗦𝗜 𝗛𝗔𝗥𝗜 𝗜𝗡𝗜
-“{motivasi}”
-
-🔥 Stay consistent, not only active.
-
-╚════════════════════════════════════╝
-"""
     return text
 
 
@@ -146,14 +129,11 @@ def get_keyboard():
             InlineKeyboardButton("🟢 HADIR", callback_data="absen_hadir"),
             InlineKeyboardButton("🟡 IZIN", callback_data="absen_izin"),
             InlineKeyboardButton("🔴 SAKIT", callback_data="absen_sakit"),
-        ],
-        [
-            InlineKeyboardButton("🛍 STORE", url="https://t.me/storegarf")
         ]
     ])
 
 
-# ================= SAFE PIN =================
+# ================= PIN =================
 
 def safe_pin(context, chat_id, msg_id):
     try:
@@ -167,7 +147,7 @@ def safe_pin(context, chat_id, msg_id):
         pass
 
 
-# ================= DAILY RESET =================
+# ================= DAILY RESET AUTO =================
 
 def daily_reset(context):
     global last_day
@@ -181,48 +161,37 @@ def daily_reset(context):
 
     for (chat_id,) in chats:
         try:
+            # ✅ kirim rekap
             context.bot.send_message(
                 chat_id,
                 "📊 DAILY REKAP\n\n" + format_absen(chat_id)
             )
-        except:
-            pass
 
-    cur.execute("DELETE FROM absen")
-    db.commit()
+            # ✅ hapus data
+            cur.execute("DELETE FROM absen WHERE chat_id=?", (chat_id,))
+            db.commit()
+
+            # ✅ kirim panel baru
+            msg = context.bot.send_message(
+                chat_id,
+                format_absen(chat_id),
+                reply_markup=get_keyboard()
+            )
+
+            # ✅ pin
+            absen_msg[chat_id] = msg.message_id
+            safe_pin(context, chat_id, msg.message_id)
+
+        except Exception as e:
+            print("RESET ERROR:", e)
 
     last_day = today
-
-
-# ================= WEEKLY RESET =================
-
-def weekly_reset(context):
-    global last_week
-
-    week = datetime.now(WIB).strftime("%Y-%W")
-
-    if last_week == week:
-        return
-
-    chats = cur.execute("SELECT DISTINCT chat_id FROM absen").fetchall()
-
-    for (chat_id,) in chats:
-        try:
-            context.bot.send_message(
-                chat_id,
-                "🏆 WEEKLY REPORT\n\n" + format_absen(chat_id)
-            )
-        except:
-            pass
-
-    last_week = week
 
 
 # ================= COMMAND =================
 
 def absen_cmd(update, context):
     daily_reset(context)
-    weekly_reset(context)
 
     chat_id = update.effective_chat.id
 
@@ -239,7 +208,6 @@ def absen_cmd(update, context):
 
 def absen_button(update, context):
     daily_reset(context)
-    weekly_reset(context)
 
     query = update.callback_query
     query.answer()
@@ -267,17 +235,18 @@ def absen_button(update, context):
         return query.message.reply_text("🟡 Kirim alasan izin:")
 
     try:
-        context.bot.edit_message_text(
-            chat_id=chat_id,
-            message_id=absen_msg.get(chat_id),
-            text=format_absen(chat_id),
-            reply_markup=get_keyboard()
-        )
+        if chat_id in absen_msg:
+            context.bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=absen_msg[chat_id],
+                text=format_absen(chat_id),
+                reply_markup=get_keyboard()
+            )
     except:
         pass
 
 
-# ================= IZIN HANDLER =================
+# ================= IZIN =================
 
 def izin_handler(update, context):
     user = update.effective_user
@@ -289,9 +258,27 @@ def izin_handler(update, context):
     save_absen(chat_id, user.id, user.first_name, "izin", update.message.text)
     del pending_izin[user.id]
 
+    update.message.reply_text("✅ izin dicatat")
+
+
+# ================= AUTO CHECK SAAT BOT HIDUP =================
+
+def auto_check(context):
+    daily_reset(context)
+
 
 # ================= REGISTER =================
 
 def register_absen(app):
     app.add_handler(CommandHandler("absen", absen_cmd))
     app.add_handler(CallbackQueryHandler(absen_button, pattern="^absen_"))
+    app.add_handler(MessageHandler(Filters.text & ~Filters.command, izin_handler))
+
+    # 🔥 AUTO RESET JAM 00:00 WIB
+    app.job_queue.run_daily(
+        daily_reset,
+        time=time(0, 0, tzinfo=WIB)
+    )
+
+    # 🔥 CEK SAAT BOT START (ANTI KELEWAT RESET)
+    app.job_queue.run_once(auto_check, 5)  
