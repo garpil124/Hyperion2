@@ -1393,6 +1393,10 @@ def on_cmd(update, context):
     WORKER_ACTIVE = True
     update.message.reply_text("✅ Tagall diaktifkan")
 
+
+# 🔥 global control buat stop
+bc_control = {}
+
 def bc_cmd(update, context):
     if update.effective_user.id not in OWNER_IDS:
         return
@@ -1405,39 +1409,113 @@ def bc_cmd(update, context):
         return
 
     msg = update.message
+    chat_id = update.effective_chat.id
 
-    success = 0
-    failed = 0
+    # 🔥 id unik broadcast
+    bc_id = f"{chat_id}_{int(time.time())}"
+    bc_control[bc_id] = {"stop": False}
 
-    update.message.reply_text("🚀 Broadcast dimulai...")
-
-    for user_id in users:
-        try:
-            # 🔥 PRIORITAS: REPLY MESSAGE (ALL TYPE)
-            if msg.reply_to_message:
-                context.bot.copy_message(
-                    chat_id=user_id,
-                    from_chat_id=msg.chat_id,
-                    message_id=msg.reply_to_message.message_id
-                )
-
-            # 🔥 TEXT BIASA
-            elif context.args:
-                text = " ".join(context.args)
-                context.bot.send_message(chat_id=user_id, text=text)
-
-            else:
-                continue
-
-            success += 1
-            time.sleep(5)  # ⏳ DELAY 5 DETIK
-
-        except:
-            failed += 1
-
-    update.message.reply_text(
-        f"📢 Broadcast selesai\n\n✅ {success} berhasil\n❌ {failed} gagal"
+    # 🔥 kirim pesan awal + tombol stop
+    progress_msg = update.message.reply_text(
+        "🚀 Broadcast dimulai...\n\n📊 0%",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("❌ STOP", callback_data=f"bc_stop_{bc_id}")]
+        ])
     )
+
+    # ================= BACKGROUND =================
+    def jalan_bc():
+        success = 0
+        failed = 0
+        total = len(users)
+
+        for i, user_id in enumerate(users, start=1):
+
+            # 🔥 cek stop
+            if bc_control[bc_id]["stop"]:
+                try:
+                    context.bot.edit_message_text(
+                        chat_id=chat_id,
+                        message_id=progress_msg.message_id,
+                        text="⛔ Broadcast dihentikan user"
+                    )
+                except:
+                    pass
+                return
+
+            try:
+                # 🔥 PRIORITAS: REPLY MESSAGE
+                if msg.reply_to_message:
+                    context.bot.copy_message(
+                        chat_id=user_id,
+                        from_chat_id=msg.chat_id,
+                        message_id=msg.reply_to_message.message_id
+                    )
+
+                # 🔥 TEXT
+                elif context.args:
+                    text = " ".join(context.args)
+                    context.bot.send_message(chat_id=user_id, text=text)
+
+                else:
+                    continue
+
+                success += 1
+
+            except:
+                failed += 1
+
+            # 🔥 update progress tiap 10 user
+            if i % 10 == 0 or i == total:
+                persen = int((i / total) * 100)
+
+                try:
+                    context.bot.edit_message_text(
+                        chat_id=chat_id,
+                        message_id=progress_msg.message_id,
+                        text=f"🚀 Broadcast jalan...\n\n📊 {i}/{total} ({persen}%)",
+                        reply_markup=InlineKeyboardMarkup([
+                            [InlineKeyboardButton("❌ STOP", callback_data=f"bc_stop_{bc_id}")]
+                        ])
+                    )
+                except:
+                    pass
+
+            time.sleep(0.1)
+
+        # 🔥 selesai
+        try:
+            context.bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=progress_msg.message_id,
+                text=(
+                    f"📢 Broadcast selesai\n\n"
+                    f"✅ {success} berhasil\n"
+                    f"❌ {failed} gagal"
+                )
+            )
+        except:
+            pass
+
+        # cleanup
+        bc_control.pop(bc_id, None)
+
+    threading.Thread(target=jalan_bc).start()
+
+
+# ================= STOP HANDLER =================
+def bc_stop_callback(update, context):
+    query = update.callback_query
+    query.answer()
+
+    data = query.data
+
+    if data.startswith("bc_stop_"):
+        bc_id = data.replace("bc_stop_", "")
+
+        if bc_id in bc_control:
+            bc_control[bc_id]["stop"] = True
+            query.answer("⛔ Broadcast dihentikan", show_alert=True)
 
 def start_cmd(update: Update, context: CallbackContext):
     data = load_setting()
@@ -2438,6 +2516,7 @@ def main():
     dp.add_handler(CommandHandler("rollback", rollback_last_backup))
     dp.add_handler(CommandHandler("on", on_cmd))
     dp.add_handler(CommandHandler("bc", bc_cmd))
+    dp.add_handler(CallbackQueryHandler(bc_stop_callback, pattern="^bc_stop_"))
     dp.add_handler(
     CallbackQueryHandler(partner_callback, pattern="^(partner_|edit_)")
 )
