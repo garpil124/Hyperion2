@@ -621,14 +621,22 @@ def partner_callback(update, context):
 
 
 def handle_edit(update, context):
+    print("🔥 HANDLE EDIT KE TRIGGER")
+
     if "edit" not in context.user_data:
+        print("❌ bukan mode edit")
         return
 
-    idx = context.user_data["edit"]["idx"]
-    data = load_partner()
+    print("✅ MODE EDIT AKTIF")
+
+    text = update.message.text.strip()
+    print("INPUT:", text)
 
     try:
-        name, link = update.message.text.split(" ", 1)
+        name, link = text.rsplit(" ", 1)
+
+        idx = context.user_data["edit"]["idx"]
+        data = load_partner()
 
         data[idx] = {
             "name": name,
@@ -639,11 +647,10 @@ def handle_edit(update, context):
         save_partner(data)
 
         update.message.reply_text("✅ updated")
-
         del context.user_data["edit"]
 
-    except:
-        update.message.reply_text("❌ format salah")
+    except Exception as e:
+        update.message.reply_text(f"❌ error\n{e}")
 
 def addbuttontag_cmd(update, context):
     print("🔥 addbuttontag kepanggil")
@@ -2541,12 +2548,15 @@ def main():
     # 🔥 tombol lain
     dp.add_handler(CallbackQueryHandler(button_handler))
 
+    dp.add_handler(
+    MessageHandler(Filters.text & ~Filters.command, handle_edit),
+    group=0
+    )
+
     # ================= PRIVATE =================
     dp.add_handler(
-        MessageHandler(
-            Filters.text & Filters.private & ~Filters.command,
-            handle_private
-        )
+    MessageHandler(Filters.text & Filters.private & ~Filters.command, handle_private),
+    group=1
     )
 
     # ================= TELETHON =================
